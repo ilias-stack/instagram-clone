@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Recover your account</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Open+Sans&display=swap");
+      * {
+        font-family: "Open Sans", sans-serif;
+      }
+      * {
+        margin: 0px;
+        padding: 0px;
+        color: white;
+      }
+      body {
+        background-color: #272727;
+      }
+
+      #wrapper {
+        width: 500px;
+        height: 50%;
+        overflow: hidden;
+        border: 0px solid #222222;
+        margin: 50px auto;
+        padding: 10px;
+      }
+
+      .main-content {
+        width: 250px;
+        height: 40%;
+        margin: 10px auto;
+        background-color: #fff;
+        background-color: #1b1b1b;
+        border: 1px solid #3d3c3c;
+        border-radius: 4px;
+        padding: 40px 50px;
+      }
+
+      .header {
+        border: 0px solid #000;
+        margin-bottom: 5px;
+      }
+
+      .header img {
+        height: 50px;
+        width: 175px;
+        margin: auto;
+        position: relative;
+        left: 40px;
+      }
+
+      .input-1,
+      .input-2 {
+        width: 100%;
+        margin-bottom: 5px;
+        padding: 8px 12px;
+        border: 1px solid #292929;
+        box-sizing: border-box;
+        border-radius: 3px;
+        background-color: #000;
+      }
+
+      .overlap-text {
+        position: relative;
+      }
+
+      .overlap-text a {
+        position: absolute;
+        top: 8px;
+        cursor: pointer;
+        right: 10px;
+        color: #0766c5;
+        font-size: 14px;
+        text-decoration: none;
+        font-family: "Overpass Mono", monospace;
+        letter-spacing: -1px;
+      }
+
+      #btn {
+        width: 100%;
+         background-color: #86bbec;  /*#3897f0 */
+        border: 1px solid #1a8af3;
+        padding: 5px 12px;
+        color: #fff;
+        font-weight: bold;
+        margin-top: 15px;
+        cursor: pointer;
+        border-radius: 3px;
+      }
+
+      input:focus {
+        background-color: rgb(17, 17, 17);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="wrapper">
+      <div class="main-content">
+        <div class="header">
+          <img src="/images/WhiteTextLogo.png" />
+        </div>
+        <div class="l-part">
+          <div class="overlap-text">
+            <input
+              type="password"
+              placeholder="Password"
+              class="input-1"
+              id="password"
+            />
+            <a onclick="showFields()">show</a>
+          </div>
+          <div class="overlap-text">
+            <input
+              type="password"
+              placeholder="Retype your password"
+              class="input-1"
+              id="confirm"
+            />
+          </div>
+          <button value="Submit password" onclick="submitPasswords()" id="btn" >salam</button>
+      
+        </div>
+    </div>
+
+    <script>
+      var isPasswordHidden = true;
+      const password = document.getElementById("password");
+      const confirm = document.getElementById("confirm");
+      const submitButton=document.getElementById("btn");
+      var canSubmit=false;
+
+      document.addEventListener("input",(event)=>{
+        console.log(password.value);
+        if(password.value.length >=8 && password.value===confirm.value){
+            submitButton.style.backgroundColor='#3897f0';
+            canSubmit=true;
+        }
+        else{
+            submitButton.style.backgroundColor='#86bbec ';
+            canSubmit=false;
+        }
+      })
+
+      function showFields() {
+        if (isPasswordHidden) {
+          isPasswordHidden = !isPasswordHidden;
+          password.type="text"
+          confirm.type="text"
+        } else {
+          isPasswordHidden = !isPasswordHidden;
+          password.type="password"
+          confirm.type="password"
+        }
+      }
+
+      submitPasswords=async()=>{
+        if(canSubmit){
+            const recoveryId=window.location.pathname.split("/")[window.location.pathname.split("/").length-1];
+            const body=JSON.stringify({
+                    "password":confirm.value
+                });
+            const response = await fetch('/user/recovery/'+recoveryId, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body
+            });
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+                alert("An unknown error occured.")
+            }
+            else{
+                alert("Password was successfully changed.")
+                window.location.reload(); 
+
+            }
+        }else{
+            alert("Passwords must match and must be 8 characters at least!");
+        }
+      }
+    </script>
+  </body>
+</html>

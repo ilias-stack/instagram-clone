@@ -1,0 +1,137 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model ProfilePicture {
+  id   Int    @id @default(autoincrement())
+  data Bytes  @db.LongBlob
+  type String
+  User User?
+}
+
+enum AccountStatus {
+  PUBLIC
+  PRIVATE
+}
+
+model User {
+  id               Int               @id @default(autoincrement())
+  username         String            @unique @db.Char(40)
+  fullname         String            @db.Char(40)
+  email            String            @unique @db.Char(40)
+  password         String            @db.Char(100)
+  birthday         DateTime          @default(now())
+  description      String?           @db.Text
+  isOnline         Boolean           @default(true)
+  accountStatus    AccountStatus     @default(PUBLIC)
+  ProfilePicture   ProfilePicture?   @relation(fields: [profilePictureId], references: [id], onDelete: Cascade)
+  profilePictureId Int?              @unique
+  AccountRecovery  AccountRecovery[]
+  Post             Post[]
+  follows          Follow[]          @relation("Followers")
+  isFollowed       Follow[]          @relation("Following")
+  sends            Conversation[]    @relation("sends")
+  receives         Conversation[]    @relation("receives")
+  Comment          Comment[]
+  Like             Like[]
+  Save             Save[]
+}
+
+model AccountRecovery {
+  id        Int      @id @default(autoincrement())
+  expiresAt DateTime @default(dbgenerated("(NOW() + INTERVAL 5 MINUTE - INTERVAL 1 HOUR)"))
+  isUsed    Boolean  @default(false)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
+}
+
+model PostImage {
+  id     Int    @id @default(autoincrement())
+  data   Bytes  @db.LongBlob
+  type   String
+  post   Post?  @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId Int?
+}
+
+model Post {
+  id             Int         @id @default(autoincrement())
+  User           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  publishingDate DateTime    @default(now())
+  length         Int         @default(1)
+  description    String?
+  PostImage      PostImage[]
+  userId         Int
+  Message        Message[]
+  Comment        Comment[]
+  Like           Like[]
+  Save           Save[]
+}
+
+model Follow {
+  id          Int  @id @default(autoincrement())
+  follower    User @relation("Followers", fields: [followerId], references: [id], onDelete: Cascade)
+  followerId  Int
+  following   User @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+  followingId Int
+
+  @@unique([followerId, followingId])
+}
+
+model Conversation {
+  id         Int       @id @default(autoincrement())
+  sender     User      @relation("sends", fields: [senderId], references: [id], onDelete: Cascade)
+  senderId   Int
+  receiver   User      @relation("receives", fields: [receiverId], references: [id], onDelete: Cascade)
+  receiverId Int
+  messages   Message[]
+
+  @@unique([senderId, receiverId])
+}
+
+model Message {
+  id                  Int           @id @default(autoincrement())
+  directionIsPositive Boolean       @default(true)
+  sendingTime         DateTime      @default(now())
+  sharedPost          Post?         @relation(fields: [sharedPostId], references: [id], onDelete: Cascade)
+  sharedPostId        Int?
+  message             String?
+  Conversation        Conversation? @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  conversationId      Int?
+}
+
+model Comment {
+  id     Int    @id @default(autoincrement())
+  text   String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId Int
+}
+
+model Like {
+  id     Int  @id @default(autoincrement())
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int
+  post   Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId Int
+
+  @@unique([userId, postId])
+}
+
+model Save {
+  id     Int  @id @default(autoincrement())
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int
+  post   Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId Int
+
+  @@unique([userId, postId])
+}
